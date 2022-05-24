@@ -1,0 +1,115 @@
+/*Query 1 - query used for "Most Popular Genre of Each Country"*/
+WITH table1
+AS (SELECT
+  i.BillingCountry AS country,
+  COUNT(il.InvoiceLineId) AS Purchases,
+  g.Name AS genre,
+  g.GenreId
+FROM Invoice i
+JOIN InvoiceLine il
+  ON il.InvoiceId = i.InvoiceId
+JOIN Track t
+  ON t.TrackId = il.TrackId
+JOIN Genre g
+  ON g.GenreId = t.GenreId
+GROUP BY 1,
+         3,
+         4),
+table2
+AS (SELECT
+  table1.country AS c,
+  MAX(table1.Purchases) AS Purchases
+FROM table1
+GROUP BY 1)
+SELECT
+  t1.country,
+  t2.Purchases,
+  t1.genre,
+  t1.GenreId
+FROM table1 t1
+JOIN table2 t2
+  ON t1.country = t2.c
+  AND t2.Purchases = t1.Purchases;
+
+
+
+
+/*Query 2-Customer with highest purchases in each country*/
+WITH table1
+AS (SELECT
+  c.CustomerId,
+  c.FirstName,
+  c.LastName,
+  c.Country,
+  SUM(i.total) AS totalPurchaces
+FROM Customer c
+JOIN Invoice i
+  ON i.CustomerId = c.CustomerId
+GROUP BY 1,
+         2,
+         3,
+         4),
+table2
+AS (SELECT
+  table1.Country AS Country,
+  MAX(table1.totalPurchaces) AS MaxPurchaces
+FROM table1
+GROUP BY 1)
+SELECT
+  t1.Country,
+  t2.MaxPurchaces AS TotalSpent,
+  t1.FirstName,
+  t1.LastName,
+  t1.CustomerId
+FROM table1 t1
+JOIN table2 t2
+  ON t1.Country = t2.Country
+  AND t2.MaxPurchaces = t1.totalPurchaces
+ORDER BY 1;
+
+
+
+/*Query 3- Top 10 rock song writers*/
+SELECT
+  a.ArtistId,
+  a.Name,
+  COUNT(t.TrackId)
+FROM Artist a
+JOIN Album al
+  ON a.ArtistId = al.ArtistId
+JOIN Track t
+  ON t.AlbumId = al.AlbumId
+JOIN Genre g
+  ON g.GenreId = t.GenreId
+  AND g.Name = "Rock"
+GROUP BY 1,
+         2
+ORDER BY 3 DESC
+LIMIT 10;
+
+
+/*Query 4 - Employees number of invoices */
+SELECT
+  e.EmployeeId,
+  e.FirstName,
+  e.LastName,
+  COUNT(c.SupportRepId) AS Invoices,
+  STRFTIME('%Y-%m-%d', e.HireDate) AS HireDate
+FROM Employee e
+JOIN Customer c
+  ON c.SupportRepId = e.EmployeeId
+JOIN Invoice i
+  ON i.CustomerId = c.CustomerId
+GROUP BY 1,
+         2,
+         3,
+         5
+ORDER BY 4 DESC;
+
+
+
+
+
+
+
+
